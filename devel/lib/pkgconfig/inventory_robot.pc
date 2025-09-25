@@ -1,0 +1,8 @@
+prefix=/home/tll/catkin_ws/devel
+
+Name: inventory_robot
+Description: Description of inventory_robot
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

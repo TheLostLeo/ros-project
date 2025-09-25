@@ -149,6 +149,7 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   include("/home/tll/catkin_ws/build/esp/cmake_install.cmake")
   include("/home/tll/catkin_ws/build/core/cmake_install.cmake")
   include("/home/tll/catkin_ws/build/ai/cmake_install.cmake")
+  include("/home/tll/catkin_ws/build/inventory_robot/cmake_install.cmake")
 
 endif()
 
