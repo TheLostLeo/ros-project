@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ai</name>
+  <version>0.0.0</version>
+  <description>AI package: OpenCV-based fish behavior detector</description>
+  <maintainer email="you@example.com">You</maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <license>MIT</license>
+  <depend>rospy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
+  <depend>std_msgs</depend>
+  <export></export>
+</package>

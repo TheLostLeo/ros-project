@@ -1,0 +1,2 @@
+ai:core:esp
+-DCMAKE_BUILD_TYPE=Release -DCATKIN_DEVEL_PREFIX=/home/tll/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/tll/catkin_ws/install -G Unix Makefiles
