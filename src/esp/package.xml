@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>esp</name>
+  <version>0.0.0</version>
+  <description>ESP package: websocket and swarm bot interfaces</description>
+  <maintainer email="you@example.com">You</maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <license>MIT</license>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <export></export>
+</package>

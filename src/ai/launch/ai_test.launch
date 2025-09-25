@@ -1,0 +1,12 @@
+<launch>
+  <arg name="video_path" default="$(env HOME)/catkin_ws/src/ai/test_videos/sample.mp4" />
+
+  <node pkg="ai" type="publish_video.py" name="publish_video" output="screen">
+    <param name="video_path" value="$(arg video_path)" />
+  </node>
+
+  <node pkg="ai" type="ai_detector.py" name="ai_detector" output="screen">
+    <param name="use_camera_device" value="false" />
+    <param name="show_window" value="false" />
+  </node>
+</launch>

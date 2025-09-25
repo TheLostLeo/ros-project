@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>core</name>
+  <version>0.0.0</version>
+  <description>Core package: central manager and start/stop services</description>
+  <maintainer email="you@example.com">You</maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <license>MIT</license>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>roslaunch</depend>
+  <export></export>
+</package>
