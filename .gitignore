@@ -1,0 +1,43 @@
+.DS_Store
+# Build and development folders
+build/
+devel/
+
+# Catkin/CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+Makefile*
+install/
+_catkin_empty_exported_target.dir/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Environment and local setup scripts
+env.sh
+local_setup.*
+setup.*
+
+# Logs and test outputs
+*.log
+test_results/
+*.pytest_cache/
+
+# VSCode
+.vscode/
+
+# JetBrains
+.idea/
+
+# Mac
+.DS_Store
+
+# Misc
+*.swp
+*~
