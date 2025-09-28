@@ -19,3 +19,7 @@ Helper script:
 Notes:
   - Ensure ROS1 (e.g., Noetic) is installed before building. Install cv_bridge and image_transport for the `ai` package.
   - The Python scripts are lightweight placeholders. Replace them with real implementations for ESP websocket communication and AI models.
+
+'''tree
+
+''''

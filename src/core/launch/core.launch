@@ -1,5 +1,0 @@
-<launch>
-  <node pkg="core" type="core_manager.py" name="core_manager" output="screen"/>
-  <node pkg="esp" type="esp_manager.py" name="esp_manager" output="screen"/>
-  <node pkg="esp" type="swarm_bot.py" name="swarm_bot" output="screen"/>
-</launch>

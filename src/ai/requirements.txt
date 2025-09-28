@@ -1,4 +1,0 @@
-opencv-python
-numpy
-cv_bridge
-image_transport

@@ -1,0 +1,6 @@
+<launch>
+  <!-- Start the WebSocket ROS bridge node -->
+  <node pkg="esp" type="websocket.py" name="esp_manager" output="screen" args="" >
+  </node>
+
+</launch>

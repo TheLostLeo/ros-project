@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  ros-dev:
+    build: .
+    container_name: swarm_ros_dev
+    network_mode: host   # lets ROS nodes use host networking
+    volumes:
+      - .:/home/dev_ws:rw   # mount repo into workspace
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw  # GUI (RViz, rqt) support
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+    devices:
+      - /dev/video0:/dev/video0   # camera passthrough (if needed)
+    stdin_open: true
+    tty: true
