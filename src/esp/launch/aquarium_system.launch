@@ -1,9 +1,0 @@
-<launch>
-  <param name="/scheduler_node/times" value="['07:00','19:00']"/>
-
-  <node pkg="esp" type="esp_websocket_node.py" name="esp_websocket" output="screen"/>
-  <node pkg="esp" type="esp_decision_node.py" name="esp_decision" output="screen"/>
-  <node pkg="esp" type="swarm_manager_node.py" name="swarm_manager" output="screen"/>
-  <node pkg="esp" type="ai_fish_monitor_node.py" name="ai_fish_monitor" output="screen"/>
-  <node pkg="esp" type="scheduler_node.py" name="scheduler" output="screen"/>
-</launch>

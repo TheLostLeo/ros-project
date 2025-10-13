@@ -2,7 +2,7 @@
 """Swarm manager: provides /trigger_cleaning service and coordinates cleaning."""
 
 import rospy
-from esp.srv import TriggerCleaning, TriggerCleaningResponse
+from swarm_manage.srv import TriggerCleaning, TriggerCleaningResponse
 from std_msgs.msg import String
 
 

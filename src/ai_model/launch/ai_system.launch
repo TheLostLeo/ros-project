@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="ai_model" type="ai_fish_monitor_node.py" name="ai_fish_monitor" output="screen" />
+</launch>

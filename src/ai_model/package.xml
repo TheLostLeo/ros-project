@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ai_model</name>
+  <version>0.0.1</version>
+  <description>AI model nodes (e.g., fish monitor) for the aquarium project</description>
+
+  <maintainer email="you@example.com">Maintainer</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>sensor_msgs</depend>
+
+</package>

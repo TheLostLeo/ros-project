@@ -1,0 +1,9 @@
+<launch>
+  <node pkg="swarm_manage" type="esp_websocket_node.py" name="esp_websocket" output="screen" />
+  <node pkg="swarm_manage" type="esp_master_node.py" name="esp_master" output="screen" />
+  <node pkg="swarm_manage" type="swarm_manager_node.py" name="swarm_manager" output="screen" />
+  <node pkg="swarm_manage" type="scheduler_node.py" name="scheduler" output="screen">
+    <param name="times" value="['07:00','19:00']" />
+  </node>
+  <node pkg="swarm_manage" type="esp_decision_node.py" name="esp_decision" output="screen" />
+</launch>
