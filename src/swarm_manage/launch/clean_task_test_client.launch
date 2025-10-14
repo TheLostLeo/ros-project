@@ -1,0 +1,22 @@
+<launch>
+  <!-- Parameters to control the test client behavior -->
+  <arg name="action_name" default="clean_task" />
+  <arg name="bot_id" default="1" />
+  <arg name="grid_rows" default="3" />
+  <arg name="grid_cols" default="3" />
+  <arg name="pattern" default="zigzag" />
+  <arg name="start_delay" default="0.5" />
+  <arg name="cancel_after" default="-1.0" />
+  <arg name="timeout" default="0.0" />
+
+  <node pkg="swarm_manage" type="clean_task_test_client.py" name="clean_task_test_client" output="screen">
+    <param name="action_name" value="$(arg action_name)" />
+    <param name="bot_id" value="$(arg bot_id)" />
+    <param name="grid_rows" value="$(arg grid_rows)" />
+    <param name="grid_cols" value="$(arg grid_cols)" />
+    <param name="pattern" value="$(arg pattern)" />
+    <param name="start_delay" value="$(arg start_delay)" />
+    <param name="cancel_after" value="$(arg cancel_after)" />
+    <param name="timeout" value="$(arg timeout)" />
+  </node>
+</launch>

@@ -1,9 +1,35 @@
 <launch>
-  <node pkg="swarm_manage" type="esp_websocket_node.py" name="esp_websocket" output="screen" />
-  <node pkg="swarm_manage" type="esp_master_node.py" name="esp_master" output="screen" />
-  <node pkg="swarm_manage" type="swarm_manager_node.py" name="swarm_manager" output="screen" />
-  <node pkg="swarm_manage" type="scheduler_node.py" name="scheduler" output="screen">
-    <param name="times" value="['07:00','19:00']" />
+  <!--
+    Swarm system launcher
+    - Starts the WebSocket bridge, decision node, and manager
+    - Provides arguments to tweak host/port, grid size, and command topic
+  -->
+
+  <!-- Arguments with sensible defaults -->
+  <arg name="ws_host" default="0.0.0.0" />
+  <arg name="ws_port" default="8765" />
+  <arg name="grid_rows" default="5" />
+  <arg name="grid_cols" default="5" />
+  <arg name="command_topic" default="/system/command" />
+
+  <!-- WebSocket Bridge Node -->
+  <node pkg="swarm_manage" type="esp_websocket_node.py" name="esp_websocket" output="screen">
+    <param name="host" value="$(arg ws_host)" />
+    <param name="port" value="$(arg ws_port)" />
   </node>
-  <node pkg="swarm_manage" type="esp_decision_node.py" name="esp_decision" output="screen" />
+
+  <!-- Decision Node (zig-zag) -->
+  <node pkg="swarm_manage" type="esp_decision_node.py" name="esp_decision" output="screen">
+    <param name="grid_rows" value="$(arg grid_rows)" />
+    <param name="grid_cols" value="$(arg grid_cols)" />
+  </node>
+
+  <!-- Action Server for multi-bot tasks -->
+  <node pkg="swarm_manage" type="esp_decision_action_server.py" name="clean_task_server" output="screen" />
+
+  <!-- Swarm Manager Node -->
+  <node pkg="swarm_manage" type="swarm_manager_node.py" name="swarm_manager" output="screen">
+    <param name="command_topic" value="$(arg command_topic)" />
+  </node>
+
 </launch>

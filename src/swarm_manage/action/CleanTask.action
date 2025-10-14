@@ -1,0 +1,17 @@
+# Goal: parameters to start a cleaning task for a specific bot
+int32 bot_id
+int32 grid_rows
+int32 grid_cols
+string pattern
+---
+# Result
+bool success
+string message
+int32 zones_cleaned
+---
+# Feedback
+int32 bot_id
+int32 current_index
+int32 total
+int32 current_zone
+string phase
