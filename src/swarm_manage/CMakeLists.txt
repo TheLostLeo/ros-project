@@ -38,9 +38,7 @@ catkin_package(
 catkin_install_python(PROGRAMS
   scripts/esp_websocket_node.py
   scripts/esp_decision_node.py
-  scripts/esp_decision_action_server.py
   scripts/swarm_manager_node.py
-  scripts/clean_task_test_client.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

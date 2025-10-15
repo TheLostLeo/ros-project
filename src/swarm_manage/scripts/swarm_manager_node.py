@@ -34,7 +34,7 @@ class SwarmManagerNode:
             rospy.loginfo("Successfully connected to '/start_cleaning' service.")
 
             rospy.loginfo("Waiting for '/stop_cleaning' service...")
-            rospy.wait_for_service('/stop_cleaning', timeout=5.0)
+            rospy.wait_for_service('/stop_cleaning', timeout=30.0)
             self.trigger_stop_service = rospy.ServiceProxy('/stop_cleaning', Trigger)
             rospy.loginfo("Successfully connected to '/stop_cleaning' service.")
 

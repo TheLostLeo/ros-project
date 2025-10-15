@@ -18,6 +18,10 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /home/dev_ws/src
 WORKDIR /home/dev_ws
 
+# Install Python dependencies for runtime nodes
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt || true
+
 # Environment setup
 RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc && \
     echo "source /home/dev_ws/devel/setup.bash" >> /root/.bashrc

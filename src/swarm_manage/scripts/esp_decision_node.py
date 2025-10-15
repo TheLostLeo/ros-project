@@ -1,163 +1,153 @@
 #!/usr/bin/env python3
 """
-A state-driven decision node for managing an aquarium cleaning task.
-It can be triggered by a service and uses feedback from the bot to execute a
-zig-zag path.
-"""
+esp_decision_node.py
+---------------------
+Simple decision node that drives the bot in a zig-zag pattern using plain text
+commands on /bot/cmd and reads bot status from /bot/status_raw (as emitted by
+esp_websocket_node).
 
+Behavior:
+- Start moving forward until an edge is detected in inbound status JSON.
+- When edge detected: stop, turn (alternate left/right at each row end), and continue.
+- Keeps looping (zig-zag) until shutdown.
+
+Assumptions:
+- The ESP32 sends periodic JSON strings over WebSocket which the bridge publishes on
+  /bot/status_raw. We expect keys like {"edge": true/false} optionally.
+- Commands are strings: "forward", "backward", "left", "right", "stop".
+
+Params:
+- ~cmd_topic (str): command topic to publish strings. Default: /bot/cmd
+- ~status_topic (str): inbound raw status topic. Default: /bot/status_raw
+- ~row_pause (float): seconds to pause after turn. Default: 0.25
+- ~step_interval (float): seconds between status polls when moving. Default: 0.3
+- ~require_edge_key (bool): if true, only act on JSON with an explicit 'edge' key. Default: false
+
+"""
+import json
+import threading
 import rospy
-from std_srvs.srv import Trigger, TriggerResponse
 from std_msgs.msg import String
-from swarm_manage.msg import BotCommand, BotStatus
-
-class ZigZag:
-    """Generates a zig-zag (or raster scan) path."""
-    def __init__(self, rows, cols):
-        self.rows = rows
-        self.cols = cols
-#!/usr/bin/env python3
-"""
-Decision node that drives the ESP bot with simple commands
-(forward/backward/left/right/stop) while following a zig-zag (boustrophedon)
-coverage pattern over a rows x cols grid.
-"""
-
-import rospy
 from std_srvs.srv import Trigger, TriggerResponse
-from std_msgs.msg import String
-from swarm_manage.msg import BotStatus, BotCommand
 
 
-class ZigZag:
-    def __init__(self, rows, cols):
-        self.rows = rows
-        self.cols = cols
-
-    def generate_path(self):
-        path = []
-        for r in range(self.rows):
-            row = list(range(r * self.cols, (r + 1) * self.cols))
-            if r % 2 == 1:
-                row.reverse()
-            path.extend(row)
-        return path
-
-
-class ESPDecisionNode:
+class DecisionNode:
     def __init__(self):
         rospy.init_node('esp_decision_node')
+        self.cmd_topic = rospy.get_param('~cmd_topic', '/bot/cmd')
+        self.status_topic = rospy.get_param('~status_topic', '/bot/status_raw')
+        self.row_pause = float(rospy.get_param('~row_pause', 0.25))
+        self.step_interval = float(rospy.get_param('~step_interval', 0.3))
+        self.require_edge_key = bool(rospy.get_param('~require_edge_key', False))
 
-        # Params
-        self.grid_rows = rospy.get_param('~grid_rows', 5)
-        self.grid_cols = rospy.get_param('~grid_cols', 5)
+        self.pub = rospy.Publisher(self.cmd_topic, String, queue_size=10)
+        rospy.Subscriber(self.status_topic, String, self.status_cb)
 
-        # State
-        self.state = 'IDLE'  # IDLE | CLEANING | FINISHED
-        self.path = []
-        self.i = -1  # waypoint index
-        self.last_status = None
+        self.lock = threading.Lock()
+        self.last_status = {}
+        self.edge_detected = False
+        self.turn_left_next = True  # alternate turns for zig-zag
+        self.running = False
+        self.worker = None
 
-        # Planner
-        self.planner = ZigZag(self.grid_rows, self.grid_cols)
+        # Services to start/stop cleaning
+        self.start_srv = rospy.Service('/start_cleaning', Trigger, self.start_cb)
+        self.stop_srv = rospy.Service('/stop_cleaning', Trigger, self.stop_cb)
 
-        # ROS I/O
-        self.simple_pub = rospy.Publisher('/bot/simple_cmd', String, queue_size=10)
-        self.cmd_pub = rospy.Publisher('/bot/cmd', BotCommand, queue_size=10)
-        rospy.Subscriber('/bot/status', BotStatus, self.status_cb)
-        rospy.Service('/start_cleaning', Trigger, self.handle_start)
-        rospy.Service('/stop_cleaning', Trigger, self.handle_stop)
+        rospy.on_shutdown(self._on_shutdown)
+        rospy.loginfo('ESP Decision Node ready. Use /start_cleaning to begin zig-zag.')
 
-        rospy.loginfo('Decision node ready (zig-zag).')
+    def status_cb(self, msg: String):
+        text = msg.data.strip()
+        try:
+            data = json.loads(text)
+            with self.lock:
+                self.last_status = data
+                # Edge logic: look for explicit boolean field 'edge', else infer from status
+                edge = None
+                if isinstance(data, dict):
+                    if 'edge' in data:
+                        edge = bool(data.get('edge'))
+                    elif not self.require_edge_key:
+                        # accept synonyms or heuristics
+                        if 'distance_cm' in data and data['distance_cm'] is not None:
+                            try:
+                                dist = float(data['distance_cm'])
+                                edge = (dist > 0 and dist < 12.0)  # same as ESP threshold
+                            except Exception:
+                                pass
+                        if edge is None and 'status' in data:
+                            # e.g., status could be 'idle' immediately after an auto-stop
+                            s = str(data['status']).lower()
+                            if s in ('edge', 'stopped'):
+                                edge = True
+                if edge is not None:
+                    self.edge_detected = edge
+        except Exception:
+            # Not JSON; ignore
+            pass
 
-    # Services
-    def handle_start(self, _req):
-        if self.state not in ('IDLE', 'FINISHED'):
-            return TriggerResponse(success=False, message=f'already {self.state}')
-        self.path = self.planner.generate_path()
-        self.i = 0
-        self.state = 'CLEANING'
-        rospy.loginfo(f'Starting cleaning with {len(self.path)} cells')
-        self.issue_next_step(prev_zone=None, next_zone=self.path[self.i])
-        return TriggerResponse(success=True, message='started')
+    def send(self, text: str):
+        self.pub.publish(String(data=text))
 
-    def handle_stop(self, _req):
-        if self.state != 'CLEANING':
-            return TriggerResponse(success=False, message=f'not cleaning ({self.state})')
-        self.state = 'IDLE'
-        self.path = []
-        self.i = -1
-        # Tell ESP to stop motors and publish structured stop
-        self.simple_pub.publish(String(data='stop'))
-        stop = BotCommand(); stop.action = 'stop'; stop.speed = 0
-        self.cmd_pub.publish(stop)
-        rospy.loginfo('Cleaning stopped -> IDLE')
-        return TriggerResponse(success=True, message='stopped')
+    def zigzag_loop(self):
+        rate = rospy.Rate(max(1, int(1.0 / max(0.01, self.step_interval))))
+        while not rospy.is_shutdown() and self.running:
+            # Move forward while no edge detected
+            self.send('forward')
+            self.edge_detected = False
+            while not rospy.is_shutdown() and self.running and not self.edge_detected:
+                # Ask for status (optional: if ESP handles 'status' requests)
+                self.send('status')
+                rate.sleep()
 
-    # Feedback
-    def status_cb(self, msg: BotStatus):
-        self.last_status = msg
-        if self.state != 'CLEANING':
-            return
-        # We advance when the bot reports it is not cleaning (idle) anymore
-        if not msg.cleaning:
-            self.i += 1
-            if self.i >= len(self.path):
-                self.state = 'FINISHED'
-                rospy.loginfo('Cleaning complete')
-                self.simple_pub.publish(String(data='stop'))
-                return
-            prev_zone = self.path[self.i - 1] if self.i - 1 >= 0 else None
-            next_zone = self.path[self.i]
-            self.issue_next_step(prev_zone, next_zone)
+            if rospy.is_shutdown():
+                break
 
-    # Movement logic (boustrophedon with simple commands)
-    def zone_to_rc(self, zone_id):
-        return zone_id // self.grid_cols, zone_id % self.grid_cols
-
-    def issue_next_step(self, prev_zone, next_zone):
-        # Publish a simple command sequence to reach next cell
-        if prev_zone is None:
-            # First move of the plan: just go forward into the first cell
-            self.simple_pub.publish(String(data='forward'))
-        else:
-            pr, pc = self.zone_to_rc(prev_zone)
-            nr, nc = self.zone_to_rc(next_zone)
-            if pr == nr:
-                # Same row -> advance one cell
-                self.simple_pub.publish(String(data='forward'))
+            # Edge detected: stop and turn
+            self.send('stop')
+            rospy.sleep(0.1)
+            if self.turn_left_next:
+                self.send('left')
             else:
-                # Row changed -> at row end; perform turn-down maneuver then advance
-                if pr % 2 == 0:
-                    # Was moving east: right, forward (step down), right
-                    self.simple_pub.publish(String(data='right'))
-                    rospy.sleep(0.2)
-                    self.simple_pub.publish(String(data='forward'))
-                    rospy.sleep(0.2)
-                    self.simple_pub.publish(String(data='right'))
-                else:
-                    # Was moving west: left, forward (step down), left
-                    self.simple_pub.publish(String(data='left'))
-                    rospy.sleep(0.2)
-                    self.simple_pub.publish(String(data='forward'))
-                    rospy.sleep(0.2)
-                    self.simple_pub.publish(String(data='left'))
-                rospy.sleep(0.2)
-                self.simple_pub.publish(String(data='forward'))
+                self.send('right')
+            self.turn_left_next = not self.turn_left_next
+            rospy.sleep(self.row_pause)
 
-        # Also publish a structured command for compatibility (optional)
-        bc = BotCommand()
-        bc.zone_id = next_zone
-        bc.action = 'clean_zone'
-        bc.speed = 0.5
-        self.cmd_pub.publish(bc)
+        # On shutdown, ensure stop
+        self.send('stop')
+
+    def start_cb(self, _req) -> TriggerResponse:
+        if self.running:
+            return TriggerResponse(success=True, message='Already running')
+        self.running = True
+        self.worker = threading.Thread(target=self.zigzag_loop, daemon=True)
+        self.worker.start()
+        return TriggerResponse(success=True, message='Zig-zag started')
+
+    def stop_cb(self, _req) -> TriggerResponse:
+        if not self.running:
+            return TriggerResponse(success=True, message='Already stopped')
+        self.running = False
+        # Allow loop to exit
+        if self.worker and self.worker.is_alive():
+            self.worker.join(timeout=2.0)
+        self.send('stop')
+        return TriggerResponse(success=True, message='Zig-zag stopped')
+
+    def _on_shutdown(self):
+        try:
+            self.running = False
+            if self.worker and self.worker.is_alive():
+                self.worker.join(timeout=2.0)
+            self.send('stop')
+        except Exception:
+            pass
 
     def spin(self):
         rospy.spin()
 
 
 if __name__ == '__main__':
-    try:
-        node = ESPDecisionNode()
-        node.spin()
-    except rospy.ROSInterruptException:
-        pass
+    node = DecisionNode()
+    node.spin()

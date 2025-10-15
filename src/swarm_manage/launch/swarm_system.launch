@@ -8,24 +8,24 @@
   <!-- Arguments with sensible defaults -->
   <arg name="ws_host" default="0.0.0.0" />
   <arg name="ws_port" default="8765" />
-  <arg name="grid_rows" default="5" />
-  <arg name="grid_cols" default="5" />
   <arg name="command_topic" default="/system/command" />
 
   <!-- WebSocket Bridge Node -->
   <node pkg="swarm_manage" type="esp_websocket_node.py" name="esp_websocket" output="screen">
     <param name="host" value="$(arg ws_host)" />
     <param name="port" value="$(arg ws_port)" />
+    <param name="topic" value="/bot/cmd" />
   </node>
 
   <!-- Decision Node (zig-zag) -->
   <node pkg="swarm_manage" type="esp_decision_node.py" name="esp_decision" output="screen">
-    <param name="grid_rows" value="$(arg grid_rows)" />
-    <param name="grid_cols" value="$(arg grid_cols)" />
+    <param name="cmd_topic" value="/bot/cmd" />
+    <param name="status_topic" value="/bot/status_raw" />
+    <param name="row_pause" value="0.25" />
+    <param name="step_interval" value="0.3" />
   </node>
 
-  <!-- Action Server for multi-bot tasks -->
-  <node pkg="swarm_manage" type="esp_decision_action_server.py" name="clean_task_server" output="screen" />
+  <!-- Removed action server; single-bot zig-zag handled by esp_decision_node -->
 
   <!-- Swarm Manager Node -->
   <node pkg="swarm_manage" type="swarm_manager_node.py" name="swarm_manager" output="screen">
