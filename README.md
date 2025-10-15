@@ -21,5 +21,5 @@ Notes:
   - The Python scripts are lightweight placeholders. Replace them with real implementations for ESP websocket communication and AI models.
 
 '''tree
-
+rostopic pub --once /bot/cmd std_msgs/String "data: 'forward'"
 ''''
