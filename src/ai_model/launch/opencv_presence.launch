@@ -1,0 +1,31 @@
+<launch>
+  <arg name="camera_topic" default="/camera/image_raw"/>
+  <arg name="publish_topic" default="/ai/fish_presence"/>
+  <arg name="method" default="shape"/>
+  <arg name="resize_w" default="320"/>
+  <arg name="resize_h" default="240"/>
+  <arg name="shape_min_area" default="800"/>
+  <arg name="shape_min_ar" default="0.2"/>
+  <arg name="shape_min_solidity" default="0.5"/>
+  <arg name="hsv_low" default="0 30 30"/>
+  <arg name="hsv_high" default="180 255 255"/>
+  <arg name="hsv_min_ratio" default="0.015"/>
+  <arg name="motion_ratio_thresh" default="0.01"/>
+  <arg name="fps_limit" default="0"/>
+
+  <node pkg="ai_model" type="opencv_fish_presence_node.py" name="opencv_fish_presence" output="screen">
+    <param name="camera_topic" value="$(arg camera_topic)"/>
+    <param name="publish_topic" value="$(arg publish_topic)"/>
+    <param name="method" value="$(arg method)"/>
+    <param name="resize_w" value="$(arg resize_w)"/>
+    <param name="resize_h" value="$(arg resize_h)"/>
+    <param name="shape_min_area" value="$(arg shape_min_area)"/>
+    <param name="shape_min_ar" value="$(arg shape_min_ar)"/>
+    <param name="shape_min_solidity" value="$(arg shape_min_solidity)"/>
+    <param name="hsv_low" value="$(arg hsv_low)"/>
+    <param name="hsv_high" value="$(arg hsv_high)"/>
+    <param name="hsv_min_ratio" value="$(arg hsv_min_ratio)"/>
+    <param name="motion_ratio_thresh" value="$(arg motion_ratio_thresh)"/>
+    <param name="fps_limit" value="$(arg fps_limit)"/>
+  </node>
+</launch>

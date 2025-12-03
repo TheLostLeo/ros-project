@@ -1,0 +1,21 @@
+<launch>
+  <arg name="source" default="0"/>
+  <arg name="width" default="320"/>
+  <arg name="height" default="240"/>
+  <arg name="pixel_diff_thresh" default="25"/>
+  <arg name="motion_ratio_thresh" default="0.015"/>
+  <arg name="ema_window_sec" default="2.0"/>
+  <arg name="behavior_topic" default="/ai/fish_behavior"/>
+  <arg name="fps_limit" default="0"/>
+
+  <node pkg="test_ai" type="opencv_behavior_node.py" name="opencv_behavior" output="screen">
+    <param name="source" value="$(arg source)"/>
+    <param name="width" value="$(arg width)"/>
+    <param name="height" value="$(arg height)"/>
+    <param name="pixel_diff_thresh" value="$(arg pixel_diff_thresh)"/>
+    <param name="motion_ratio_thresh" value="$(arg motion_ratio_thresh)"/>
+    <param name="ema_window_sec" value="$(arg ema_window_sec)"/>
+    <param name="behavior_topic" value="$(arg behavior_topic)"/>
+    <param name="fps_limit" value="$(arg fps_limit)"/>
+  </node>
+</launch>

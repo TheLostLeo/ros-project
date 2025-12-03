@@ -9,6 +9,7 @@
   <arg name="ws_host" default="0.0.0.0" />
   <arg name="ws_port" default="8765" />
   <arg name="command_topic" default="/system/command" />
+  <arg name="start_scheduler" default="true" />
 
   <!-- WebSocket Bridge Node -->
   <node pkg="swarm_manage" type="esp_websocket_node.py" name="esp_websocket" output="screen">
@@ -31,5 +32,13 @@
   <node pkg="swarm_manage" type="swarm_manager_node.py" name="swarm_manager" output="screen">
     <param name="command_topic" value="$(arg command_topic)" />
   </node>
+
+  <!-- Scheduler Node (optional) -->
+  <group if="$(arg start_scheduler)">
+    <node pkg="swarm_manage" type="scheduler_node.py" name="scheduler" output="screen">
+      <param name="command_topic" value="$(arg command_topic)" />
+      <!-- Topics to control scheduler: /scheduler/set_daily_alarm (String), /scheduler/set_timer (Int32) -->
+    </node>
+  </group>
 
 </launch>

@@ -39,6 +39,8 @@ catkin_install_python(PROGRAMS
   scripts/esp_websocket_node.py
   scripts/esp_decision_node.py
   scripts/swarm_manager_node.py
+  scripts/teleop_web_node.py
+  scripts/scheduler_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

@@ -5,6 +5,8 @@ from typing import Set, Optional, Any
 import rospy
 import websockets
 from std_msgs.msg import String
+import signal
+import socket
 
 
 NODE_NAME = "ros_websocket_bridge"
@@ -62,7 +64,7 @@ def ros_cmd_callback(msg: String) -> None:
 async def handle_client(websocket: Any, path: str):
     """Handle a single websocket client connection."""
     CONNECTED_CLIENTS.add(websocket)
-    log("INFO", f"Client connected: {websocket.remote_address}")
+    log("INFO", f"Client connected: {websocket.remote_address}, path={path}")
     try:
         # We don't publish to /bot/cmd anymore. Just consume messages (if any) and ignore.
         async for message in websocket:
@@ -106,8 +108,19 @@ async def main():
     STATUS_PUB = rospy.Publisher(STATUS_TOPIC, String, queue_size=20)
 
     # Start WebSocket server
-    await websockets.serve(handle_client, host, port)
+    server = await websockets.serve(handle_client, host, port)
     log("INFO", f"WebSocket server started on ws://{host}:{port}")
+    # Also show a reachable IP if bound to 0.0.0.0 for convenience
+    display_host = host
+    if host in ("0.0.0.0", "::"):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+                s.connect(("8.8.8.8", 80))
+                display_host = s.getsockname()[0]
+        except Exception:
+            # Fallback: keep provided host
+            pass
+    log("INFO", f"WebSocket reachable at: ws://{display_host}:{port}")
 
     # Keep running until ROS shutdown
     stop = asyncio.Future()
@@ -116,8 +129,36 @@ async def main():
         if not stop.done():
             stop.set_result(True)
 
+    # Wire shutdown events: ROS and POSIX signals (Ctrl-C)
     rospy.on_shutdown(on_shutdown)
+    try:
+        loop = asyncio.get_running_loop()
+        loop.add_signal_handler(signal.SIGINT, on_shutdown)
+        loop.add_signal_handler(signal.SIGTERM, on_shutdown)
+    except (NotImplementedError, RuntimeError):
+        # Signal handlers not available (e.g., non-main thread or platform); rely on ROS
+        pass
+
     await stop
+
+    # Graceful shutdown: close all client sockets and the server
+    log("INFO", "Shutting down WebSocket server and closing client connections...")
+    try:
+        # Close client connections
+        clients = list(CONNECTED_CLIENTS)
+        for ws in clients:
+            try:
+                await ws.close(code=1001, reason="Server shutdown")
+            except Exception:
+                pass
+        CONNECTED_CLIENTS.clear()
+
+        # Close the server
+        server.close()
+        await server.wait_closed()
+        log("INFO", "WebSocket server closed.")
+    except Exception as e:
+        log("ERROR", f"Error during websocket shutdown: {e}")
 
 
 if __name__ == "__main__":

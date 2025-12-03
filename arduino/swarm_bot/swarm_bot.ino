@@ -8,7 +8,7 @@ const char* ssid     = "Password";
 const char* password = "passwordnotfound";
 
 // ===================== WebSocket =====================
-const char* ws_host = "10.63.209.72";
+const char* ws_host = "10.171.9.72";
 const uint16_t ws_port = 8765;
 const char* ws_path = "/esp/1";
 WebsocketsClient client;
@@ -30,7 +30,7 @@ const int BIN2 = 18;
 const int STBY = 4;
 
 // ===================== Variables =====================
-int driveSpeed = 100;
+int driveSpeed = 190;
 bool isMoving = false;
 String currentDirection = "stop";
 String edgeState = "unknown";

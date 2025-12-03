@@ -1,15 +1,18 @@
 version: "3.9"
 services:
   ros-dev:
-    build: .
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
     container_name: swarm_ros_dev
     network_mode: host   # lets ROS nodes use host networking
     volumes:
-      - .:/home/dev_ws:rw   # mount repo into workspace
+      - ../src:/home/dev_ws/src:rw   # mount only the source tree into catkin src
       - /tmp/.X11-unix:/tmp/.X11-unix:rw  # GUI (RViz, rqt) support
     environment:
       - DISPLAY=${DISPLAY}
       - QT_X11_NO_MITSHM=1
+      - ROS_WS_ROOT=/home/dev_ws
       # ROS networking: use localhost by default (same container)
       # If running nodes across machines, set ROS_IP to your host IP instead.
       - ROS_MASTER_URI=http://127.0.0.1:11311
@@ -18,3 +21,4 @@ services:
       - /dev/video0:/dev/video0   # camera passthrough (if needed)
     stdin_open: true
     tty: true
+    command: bash -lc "source /opt/ros/noetic/setup.bash && cd /home/dev_ws && if [ -d src ]; then echo '[dev_ws] Running catkin_make after mount...'; catkin_make || true; fi; exec bash"

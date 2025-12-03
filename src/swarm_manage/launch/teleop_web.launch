@@ -1,0 +1,13 @@
+<launch>
+  <arg name="host" default="0.0.0.0"/>
+  <arg name="port" default="8080"/>
+  <arg name="cmd_topic" default="/bot/cmd"/>
+  <arg name="status_topic" default="/bot/status_raw"/>
+
+  <node pkg="swarm_manage" type="teleop_web_node.py" name="teleop_web" output="screen">
+    <param name="host" value="$(arg host)"/>
+    <param name="port" value="$(arg port)"/>
+    <param name="cmd_topic" value="$(arg cmd_topic)"/>
+    <param name="status_topic" value="$(arg status_topic)"/>
+  </node>
+</launch>

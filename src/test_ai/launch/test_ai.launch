@@ -1,0 +1,13 @@
+<launch>
+  <arg name="period_sec" default="10.0"/>
+  <arg name="enable_presence" default="true"/>
+  <arg name="enable_behavior" default="true"/>
+  <arg name="enable_quality" default="true"/>
+
+  <node pkg="test_ai" type="ai_simulator_node.py" name="ai_simulator" output="screen">
+    <param name="period_sec" value="$(arg period_sec)"/>
+    <param name="enable_presence" value="$(arg enable_presence)"/>
+    <param name="enable_behavior" value="$(arg enable_behavior)"/>
+    <param name="enable_quality" value="$(arg enable_quality)"/>
+  </node>
+</launch>

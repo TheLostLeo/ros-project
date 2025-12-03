@@ -12,6 +12,9 @@ catkin_package(
 
 catkin_install_python(PROGRAMS
   scripts/ai_fish_monitor_node.py
+  scripts/water_quality_node.py
+  scripts/fish_behavior_node.py
+  scripts/opencv_fish_presence_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

@@ -1,3 +1,25 @@
 <launch>
-  <node pkg="ai_model" type="ai_fish_monitor_node.py" name="ai_fish_monitor" output="screen" />
+  <arg name="model_path" default="$(find ai_model)/../../models/fish_presence.onnx"/>
+  <arg name="camera_topic" default="/camera/image_raw"/>
+  <arg name="publish_topic" default="/ai/fish_presence"/>
+
+  <node pkg="ai_model" type="ai_fish_monitor_node.py" name="ai_fish_monitor" output="screen">
+    <param name="model_path" value="$(arg model_path)"/>
+    <param name="camera_topic" value="$(arg camera_topic)"/>
+    <param name="publish_topic" value="$(arg publish_topic)"/>
+  </node>
+
+  <!-- Water quality (OpenCV heuristics) -->
+  <node pkg="ai_model" type="water_quality_node.py" name="water_quality" output="screen">
+    <param name="camera_topic" value="$(arg camera_topic)"/>
+    <param name="publish_topic" value="/ai/water_quality"/>
+  </node>
+
+  <!-- Fish behavior (model if present, else heuristic) -->
+  <arg name="behavior_model" default="$(find ai_model)/../../models/fish_behavior.onnx"/>
+  <node pkg="ai_model" type="fish_behavior_node.py" name="fish_behavior" output="screen">
+    <param name="model_path" value="$(arg behavior_model)"/>
+    <param name="camera_topic" value="$(arg camera_topic)"/>
+    <param name="publish_topic" value="/ai/fish_behavior"/>
+  </node>
 </launch>
